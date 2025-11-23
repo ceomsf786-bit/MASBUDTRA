@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Budget Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .income-card {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+        }
+        .expense-card {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        .summary-card h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .summary-card p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .btn-income {
+            background: #84fab0;
+            color: #333;
+        }
+        .btn-expense {
+            background: #fa709a;
+            color: white;
+        }
+        .btn-export {
+            background: #667eea;
+            color: white;
+        }
+        .btn-clear {
+            background: #ff6b6b;
+            color: white;
+        }
+        .transactions {
+            margin-top: 30px;
+        }
+        .transactions h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .transaction-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .transaction-item.income {
+            border-left-color: #84fab0;
+        }
+        .transaction-item.expense {
+            border-left-color: #fa709a;
+        }
+        .transaction-details {
+            flex: 1;
+        }
+        .transaction-date {
+            font-size: 12px;
+            color: #888;
+        }
+        .transaction-description {
+            font-weight: 600;
+            color: #333;
+            margin: 5px 0;
+        }
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .transaction-amount.income {
+            color: #10b981;
+        }
+        .transaction-amount.expense {
+            color: #ef4444;
+        }
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Monthly Budget Tracker</h1>
+        
+        <div class="summary">
+            <div class="summary-card income-card">
+                <h3>Total Income</h3>
+                <p id="totalIncome">$0.00</p>
+            </div>
+            <div class="summary-card expense-card">
+                <h3>Total Expenses</h3>
+                <p id="totalExpense">$0.00</p>
+            </div>
+            <div class="summary-card balance-card">
+                <h3>Balance</h3>
+                <p id="balance">$0.00</p>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="descInput" placeholder="e.g., Salary, Groceries, Rent">
+            </div>
+            <div class="form-group">
+                <label>Amount (R)</label>
+                <input type="number" id="amountInput" placeholder="0,00" step="0.01">
+            </div>
+            <div class="button-group">
+                <button class="btn-income" onclick="addTransaction('income')">+ Add Income</button>
+                <button class="btn-expense" onclick="addTransaction('expense')">- Add Expense</button>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-export" onclick="exportToCSV()">📊 Export to CSV</button>
+            <button class="btn-clear" onclick="clearAllData()">🗑️ Clear All Data</button>
+        </div>
+
+        <div class="transactions">
+            <h2>Transaction History</h2>
+            <div class="transaction-list" id="transactionList">
+                <div class="empty-state">No transactions yet. Add your first transaction above!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transactions = [];
+
+        // Load data on page load
+        window.onload = function() {
+            loadData();
+            document.getElementById('dateInput').valueAsDate = new Date();
+        };
+
+        function loadData() {
+            const saved = localStorage.getItem('budgetTransactions');
+            if (saved) {
+                transactions = JSON.parse(saved);
+                updateDisplay();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('budgetTransactions', JSON.stringify(transactions));
+        }
+
+        function addTransaction(type) {
+            const date = document.getElementById('dateInput').value;
+            const desc = document.getElementById('descInput').value.trim();
+            const amount = parseFloat(document.getElementById('amountInput').value);
+
+            if (!date || !desc || !amount || amount <= 0) {
+                alert('Please fill in all fields with valid values!');
+                return;
+            }
+
+            const transaction = {
+                id: Date.now(),
+                date: date,
+                description: desc,
+                amount: amount,
+                type: type
+            };
+
+            transactions.push(transaction);
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            saveData();
+            updateDisplay();
+            
+            // Clear inputs
+            document.getElementById('descInput').value = '';
+            document.getElementById('amountInput').value = '';
+        }
+
+        function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            transactions.forEach(t => {
+                if (t.type === 'income') {
+                    totalIncome += t.amount;
+                } else {
+                    totalExpense += t.amount;
+                }
+            });
+
+            const balance = totalIncome - totalExpense;
+
+            document.getElementById('totalIncome').textContent = 'R' + totalIncome.toFixed(2).replace('.', ',');
+            document.getElementById('totalExpense').textContent = 'R' + totalExpense.toFixed(2).replace('.', ',');
+            document.getElementById('balance').textContent = 'R' + balance.toFixed(2).replace('.', ',');
+
+            const listEl = document.getElementById('transactionList');
+            
+            if (transactions.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No transactions yet. Add your first transaction above!</div>';
+                return;
+            }
+
+            listEl.innerHTML = transactions.map(t => `
+                <div class="transaction-item ${t.type}">
+                    <div class="transaction-details">
+                        <div class="transaction-date">${formatDate(t.date)}</div>
+                        <div class="transaction-description">${t.description}</div>
+                    </div>
+                    <div class="transaction-amount ${t.type}">
+                        ${t.type === 'income' ? '+' : '-'}R${t.amount.toFixed(2).replace('.', ',')}
+                    </div>
+                    <button class="delete-btn" onclick="deleteTransaction(${t.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function exportToCSV() {
+            if (transactions.length === 0) {
+                alert('No transactions to export!');
+                return;
+            }
+
+            let csv = 'Date;Description;Type;Amount\n';
+            transactions.forEach(t => {
+                csv += `${t.date};"${t.description}";${t.type};${t.amount.toFixed(2).replace('.', ',')}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `budget_tracker_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all transactions? This cannot be undone!')) {
+                transactions = [];
+                saveData();
+                updateDisplay();
+            }
+        }
+    </script>
+</body>
+</html>
