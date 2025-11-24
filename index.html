@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monthly Budget Tracker</title>
+    <title>Monthly Budget Tracker241125</title>
     <style>
         * {
             margin: 0;
@@ -212,12 +212,16 @@
                 <input type="date" id="dateInput">
             </div>
             <div class="form-group">
+                <label>Category</label>
+                <input type="text" id="categoryInput" placeholder="e.g., Food, Transport, Salary">
+            </div>
+            <div class="form-group">
                 <label>Description</label>
                 <input type="text" id="descInput" placeholder="e.g., Salary, Groceries, Rent">
             </div>
             <div class="form-group">
                 <label>Amount (R)</label>
-                <input type="number" id="amountInput" placeholder="0,00" step="0.01">
+                <input type="number" id="amountInput" placeholder="0" step="1" min="0">
             </div>
             <div class="button-group">
                 <button class="btn-income" onclick="addTransaction('income')">+ Add Income</button>
@@ -261,10 +265,11 @@
 
         function addTransaction(type) {
             const date = document.getElementById('dateInput').value;
+            const category = document.getElementById('categoryInput').value.trim();
             const desc = document.getElementById('descInput').value.trim();
-            const amount = parseFloat(document.getElementById('amountInput').value);
+            const amount = parseInt(document.getElementById('amountInput').value);
 
-            if (!date || !desc || !amount || amount <= 0) {
+            if (!date || !category || !desc || !amount || amount <= 0) {
                 alert('Please fill in all fields with valid values!');
                 return;
             }
@@ -272,6 +277,7 @@
             const transaction = {
                 id: Date.now(),
                 date: date,
+                category: category,
                 description: desc,
                 amount: amount,
                 type: type
@@ -284,6 +290,7 @@
             updateDisplay();
             
             // Clear inputs
+            document.getElementById('categoryInput').value = '';
             document.getElementById('descInput').value = '';
             document.getElementById('amountInput').value = '';
         }
@@ -310,9 +317,9 @@
 
             const balance = totalIncome - totalExpense;
 
-            document.getElementById('totalIncome').textContent = 'R' + totalIncome.toFixed(2).replace('.', ',');
-            document.getElementById('totalExpense').textContent = 'R' + totalExpense.toFixed(2).replace('.', ',');
-            document.getElementById('balance').textContent = 'R' + balance.toFixed(2).replace('.', ',');
+            document.getElementById('totalIncome').textContent = 'R' + totalIncome.toLocaleString('en-ZA');
+            document.getElementById('totalExpense').textContent = 'R' + totalExpense.toLocaleString('en-ZA');
+            document.getElementById('balance').textContent = 'R' + balance.toLocaleString('en-ZA');
 
             const listEl = document.getElementById('transactionList');
             
@@ -324,11 +331,11 @@
             listEl.innerHTML = transactions.map(t => `
                 <div class="transaction-item ${t.type}">
                     <div class="transaction-details">
-                        <div class="transaction-date">${formatDate(t.date)}</div>
+                        <div class="transaction-date">${formatDate(t.date)} • ${t.category}</div>
                         <div class="transaction-description">${t.description}</div>
                     </div>
                     <div class="transaction-amount ${t.type}">
-                        ${t.type === 'income' ? '+' : '-'}R${t.amount.toFixed(2).replace('.', ',')}
+                        ${t.type === 'income' ? '+' : '-'}R${t.amount.toLocaleString('en-ZA')}
                     </div>
                     <button class="delete-btn" onclick="deleteTransaction(${t.id})">Delete</button>
                 </div>
@@ -346,18 +353,25 @@
                 return;
             }
 
-            let csv = 'Date;Description;Type;Amount\n';
+            let csv = 'Date;Category;Description;Type;Amount\n';
             transactions.forEach(t => {
-                csv += `${t.date};"${t.description}";${t.type};${t.amount.toFixed(2).replace('.', ',')}\n`;
+                const categoryUpper = (t.category || '').toUpperCase();
+                const description = (t.description || '').replace(/"/g, '""');
+                csv += `${t.date};${categoryUpper};"${description}";${t.type};${t.amount}\n`;
             });
 
-            const blob = new Blob([csv], { type: 'text/csv' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `budget_tracker_${new Date().toISOString().split('T')[0]}.csv`;
+            a.setAttribute('href', url);
+            a.setAttribute('download', `budget_tracker_${new Date().toISOString().split('T')[0]}.csv`);
+            a.style.display = 'none';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            
+            alert('CSV file downloaded successfully!');
         }
 
         function clearAllData() {
